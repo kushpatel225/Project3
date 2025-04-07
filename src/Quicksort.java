@@ -2,8 +2,6 @@
  * {Project Description Here}
  */
 
-
-
 /**
  * The class containing the main method.
  *
@@ -35,9 +33,40 @@ public class Quicksort {
 
     /**
      * @param args
-     *      Command line parameters.  See the project spec!!!
+     *            Command line parameters. See the project spec!!!
      */
     public static void main(String[] args) {
         // This is the main file for the program.
+
+        // Classes
+        /**
+         * Quicksort
+         * Main class, shouldn't write everything here
+         * Needs to accept the number of buffers as params
+         */
+        /**
+         * Buffer class
+         * Need to store ID block (Block index in file that it is storing data
+         * for)
+         * Dirty bit (Update bit)
+         * byte Array, size 4096, represents the actual data that the buffer
+         * stores
+         */
+        /**
+         * Buffer pool
+         * File, file we need to sort
+         * Number of disk reads
+         * Number of disk writes, how many times had to access to the disk
+         * Number of cache hits, how many times a record was called and found in
+         * the buffer
+         * Buffer array
+         * Methods:
+         * Getbytes
+         * Writebytes
+         */
+        /**
+         * Sort
+         * Logic for quicksort
+         */
     }
 }
