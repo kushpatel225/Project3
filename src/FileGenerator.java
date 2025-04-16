@@ -10,6 +10,9 @@ import java.util.Random;
  * The {@code FileType} enum is used to specify the format of the generated test
  * data file.
  * 
+ * @author {Your Name Here}
+ * @version {Put Something Here}
+ * 
  */
 enum FileType {
     /** Represents a binary file format */
@@ -34,6 +37,7 @@ enum FileType {
  * and often looks like textual garbage.
  * 
  * @author Cliff Shaffer, Patrick Sullivan
+ * @version {Put Something Here}
  */
 public class FileGenerator {
     /** The number of bytes in a key (short). */
@@ -120,8 +124,7 @@ public class FileGenerator {
         }
         catch (IOException e) {
             e.printStackTrace();
-            System.out.println(
-                "ERROR: IOException in fileGen. See System.err");
+            System.out.println("ERROR: IOException in fileGen. See System.err");
             return;
         }
     }
@@ -165,7 +168,8 @@ public class FileGenerator {
      *             if writing shorts encounters an issue
      */
     private void generateBinaryFile(DataOutputStream dos) throws IOException {
-        int randKey, randVal;
+        int randKey;
+        int randVal;
         int minRand = 1; // minimum random short
         int range = 30000 - minRand; // max random short - min random short
         for (int i = 0; i < numBlocks; i++) {

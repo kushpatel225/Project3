@@ -1,7 +1,7 @@
-import java.io.File; 
-import java.io.RandomAccessFile; 
-import java.nio.ByteBuffer; 
-import student.TestCase; 
+import java.io.File;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import student.TestCase;
 
 /**
  * Unit tests for the {@link BufferPool} class, which is responsible for
@@ -11,10 +11,13 @@ import student.TestCase;
  * correctly handles reading and writing data, eviction of least recently used
  * (LRU) buffers, cache hit and miss behavior, and flushing dirty buffers to
  * disk.
+ * 
+ * @author {Your Name Here}
+ * @version {Put Something Here}
  */
 public class BufferPoolTest extends TestCase {
 
-    private String testFile = "bufferTest.bin"; 
+    private String testFile = "bufferTest.bin";
 
     /**
      * Sets up the test environment by creating a binary test file with 1024
@@ -27,15 +30,15 @@ public class BufferPoolTest extends TestCase {
      *             If an error occurs during test setup
      */
     protected void setUp() throws Exception {
-        super.setUp(); 
+        super.setUp();
 
         // Create a test binary file with 1024 records
-        RandomAccessFile raf = new RandomAccessFile(testFile, "rw"); 
-        for (int i = 0;  i < 1024;  i++) {
-            raf.writeShort(i);  // key
-            raf.writeShort(i + 100);  // value
+        RandomAccessFile raf = new RandomAccessFile(testFile, "rw");
+        for (int i = 0; i < 1024; i++) {
+            raf.writeShort(i); // key
+            raf.writeShort(i + 100); // value
         }
-        raf.close(); 
+        raf.close();
     }
 
 
@@ -49,25 +52,25 @@ public class BufferPoolTest extends TestCase {
      *             If an error occurs during the test
      */
     public void testReadAndWrite() throws Exception {
-        BufferPool pool = new BufferPool(testFile, 2); 
+        BufferPool pool = new BufferPool(testFile, 2);
 
-        byte[] record = new byte[4]; 
-        pool.getbytes(record, 4, 0);  // Read first record
-        short key = ByteBuffer.wrap(record).getShort(); 
-        assertEquals(0, key); 
+        byte[] record = new byte[4];
+        pool.getbytes(record, 4, 0); // Read first record
+        short key = ByteBuffer.wrap(record).getShort();
+        assertEquals(0, key);
 
         // Overwrite first record
         byte[] newRecord = ByteBuffer.allocate(4).putShort((short)9000)
-            .putShort((short)9999).array(); 
-        pool.insert(newRecord, 4, 0); 
-        pool.flush(); 
+            .putShort((short)9999).array();
+        pool.insert(newRecord, 4, 0);
+        pool.flush();
 
         // Re-read the overwritten record
-        byte[] check = new byte[4]; 
-        pool.getbytes(check, 4, 0); 
-        assertEquals(9000, ByteBuffer.wrap(check).getShort()); 
+        byte[] check = new byte[4];
+        pool.getbytes(check, 4, 0);
+        assertEquals(9000, ByteBuffer.wrap(check).getShort());
 
-        pool.close(); 
+        pool.close();
     }
 
 
@@ -85,28 +88,28 @@ public class BufferPoolTest extends TestCase {
     public void testEviction() throws Exception {
         // Test LRU eviction policy by filling the buffer pool and accessing
         // blocks
-        BufferPool pool = new BufferPool(testFile, 2);  // Set max 2 buffers
+        BufferPool pool = new BufferPool(testFile, 2); // Set max 2 buffers
 
-        byte[] record1 = new byte[4]; 
-        byte[] record2 = new byte[4]; 
-        byte[] record3 = new byte[4]; 
+        byte[] record1 = new byte[4];
+        byte[] record2 = new byte[4];
+        byte[] record3 = new byte[4];
 
         // Access three different blocks to cause eviction
-        pool.getbytes(record1, 4, 0);  // Block 0
-        pool.getbytes(record2, 4, 1);  // Block 1
-        pool.getbytes(record3, 4, 2);  // Block 2 (should evict Block 0)
+        pool.getbytes(record1, 4, 0); // Block 0
+        pool.getbytes(record2, 4, 1); // Block 1
+        pool.getbytes(record3, 4, 2); // Block 2 (should evict Block 0)
 
         // Check cache hits (should be 0 since the blocks are not re-accessed)
-        assertEquals(0, pool.getCacheHits()); 
+        assertEquals(0, pool.getCacheHits());
 
         // Re-access Block 0 to trigger a cache hit (after eviction)
-        pool.getbytes(record1, 4, 0); 
+        pool.getbytes(record1, 4, 0);
 
         // Ensure the cache hit count increases after the block is evicted and
         // re-accessed
-        // assertEquals(1, pool.getCacheHits()); 
+        // assertEquals(1, pool.getCacheHits());
 
-        pool.close(); 
+        pool.close();
     }
 
 
@@ -120,18 +123,18 @@ public class BufferPoolTest extends TestCase {
      *             If an error occurs during the test
      */
     public void testCacheHitsAndMisses() throws Exception {
-        BufferPool pool = new BufferPool(testFile, 2); 
-        byte[] record = new byte[4]; 
+        BufferPool pool = new BufferPool(testFile, 2);
+        byte[] record = new byte[4];
 
         // First access should result in a cache miss
-        pool.getbytes(record, 4, 0); 
-        assertEquals(0, pool.getCacheHits());  // No hits yet
+        pool.getbytes(record, 4, 0);
+        assertEquals(0, pool.getCacheHits()); // No hits yet
 
         // Re-access the same block should be a cache hit
-        pool.getbytes(record, 4, 0); 
-        // assertEquals(1, pool.getCacheHits());  // 1 hit after re-access
+        pool.getbytes(record, 4, 0);
+        // assertEquals(1, pool.getCacheHits()); // 1 hit after re-access
 
-        pool.close(); 
+        pool.close();
     }
 
 
@@ -144,19 +147,19 @@ public class BufferPoolTest extends TestCase {
      *             If an error occurs during the test
      */
     public void testFlushWritesDirtyBuffers() throws Exception {
-        BufferPool pool = new BufferPool(testFile, 2); 
+        BufferPool pool = new BufferPool(testFile, 2);
 
         byte[] record = ByteBuffer.allocate(4).putShort((short)1234).putShort(
-            (short)5678).array(); 
+            (short)5678).array();
 
-        pool.insert(record, 4, 0); 
-        pool.flush();  // Ensure this writes the data to disk
+        pool.insert(record, 4, 0);
+        pool.flush(); // Ensure this writes the data to disk
 
-        byte[] check = new byte[4]; 
-        pool.getbytes(check, 4, 0); 
-        assertEquals(1234, ByteBuffer.wrap(check).getShort()); 
+        byte[] check = new byte[4];
+        pool.getbytes(check, 4, 0);
+        assertEquals(1234, ByteBuffer.wrap(check).getShort());
 
-        pool.close(); 
+        pool.close();
     }
 
 
@@ -167,10 +170,10 @@ public class BufferPoolTest extends TestCase {
      *             If an error occurs during teardown
      */
     protected void tearDown() throws Exception {
-        File f = new File(testFile); 
+        File f = new File(testFile);
         if (f.exists()) {
-            f.delete(); 
+            f.delete();
         }
-        super.tearDown(); 
+        super.tearDown();
     }
 }

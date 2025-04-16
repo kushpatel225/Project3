@@ -1,8 +1,8 @@
-import java.io.IOException; 
-import java.io.RandomAccessFile; 
-import java.util.HashMap; 
-import java.util.LinkedList; 
-import java.util.Map; 
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Buffer pool implementation that manages a cache of blocks from a disk file.
@@ -11,27 +11,28 @@ import java.util.Map;
  * the
  * physical file storage, providing efficient data access and minimizing disk
  * I/O.
+ * 
  * @author {Your Name Here}
  * @version {Put Something Here}
  */
 class BufferPool implements BufferPoolADT {
     /** Standard buffer size in bytes (4KB) */
-    private final int bufferSize = 4096; 
+    private final int bufferSize = 4096;
 
     /** Maximum number of buffers to keep in memory */
-    private final int numBuffers; 
+    private final int numBuffers;
 
     /** Random access file for reading and writing */
-    private final RandomAccessFile file; 
+    private final RandomAccessFile file;
 
     /**
      * Buffer cache mapped by block ID for O(1) lookups
      * Separated from LRU tracking for improved performance
      */
-    private final Map<Integer, Buffer> cache; 
+    private final Map<Integer, Buffer> cache;
 
     /** Tracks the order of buffer usage for LRU eviction policy */
-    private final LinkedList<Integer> lruList; 
+    private final LinkedList<Integer> lruList;
 
     /**
      * Caches the most recently accessed buffer to optimize sequential access
@@ -39,12 +40,12 @@ class BufferPool implements BufferPoolADT {
      * This is a significant optimization for algorithms with locality of
      * reference
      */
-    private Buffer lastAccessedBuffer = null; 
+    private Buffer lastAccessedBuffer = null;
 
     /** Statistics counters */
-    private long cacheHits = 0; 
-    private long diskReads = 0; 
-    private long diskWrites = 0; 
+    private long cacheHits = 0;
+    private long diskReads = 0;
+    private long diskWrites = 0;
 
     /**
      * Constructs a new buffer pool for the specified file.
@@ -57,10 +58,10 @@ class BufferPool implements BufferPoolADT {
      *             If the file cannot be opened or accessed
      */
     public BufferPool(String filename, int numBuffers) throws IOException {
-        this.file = new RandomAccessFile(filename, "rw"); 
-        this.numBuffers = numBuffers; 
-        this.cache = new HashMap<>(numBuffers); 
-        this.lruList = new LinkedList<>(); 
+        this.file = new RandomAccessFile(filename, "rw");
+        this.numBuffers = numBuffers;
+        this.cache = new HashMap<>(numBuffers);
+        this.lruList = new LinkedList<>();
     }
 
 
@@ -78,8 +79,8 @@ class BufferPool implements BufferPoolADT {
     @Override
     public void getbytes(byte[] space, int sz, int pos) {
         // Calculate which block contains the data
-        int blockId = pos / bufferSize; 
-        int offset = pos % bufferSize; 
+        int blockId = pos / bufferSize;
+        int offset = pos % bufferSize;
 
         // Optimization: Check if this access is to the same block as last time
         // This significantly improves performance for sequential access
@@ -87,13 +88,13 @@ class BufferPool implements BufferPoolADT {
         if (lastAccessedBuffer != null && lastAccessedBuffer
             .getBlockId() == blockId) {
             System.arraycopy(lastAccessedBuffer.getData(), offset, space, 0,
-                sz); 
-            return; 
+                sz);
+            return;
         }
 
-        Buffer buffer = getBlock(blockId); 
-        lastAccessedBuffer = buffer; 
-        System.arraycopy(buffer.getData(), offset, space, 0, sz); 
+        Buffer buffer = getBlock(blockId);
+        lastAccessedBuffer = buffer;
+        System.arraycopy(buffer.getData(), offset, space, 0, sz);
     }
 
 
@@ -110,23 +111,23 @@ class BufferPool implements BufferPoolADT {
      */
     @Override
     public void insert(byte[] space, int sz, int pos) {
-        int blockId = pos / bufferSize; 
-        int offset = pos % bufferSize; 
+        int blockId = pos / bufferSize;
+        int offset = pos % bufferSize;
 
         // Optimization: Check if this access is to the same block as last time
         // This significantly improves performance for sequential writes
         if (lastAccessedBuffer != null && lastAccessedBuffer
             .getBlockId() == blockId) {
             System.arraycopy(space, 0, lastAccessedBuffer.getData(), offset,
-                sz); 
-            lastAccessedBuffer.setDirty(true); 
-            return; 
+                sz);
+            lastAccessedBuffer.setDirty(true);
+            return;
         }
 
-        Buffer buffer = getBlock(blockId); 
-        lastAccessedBuffer = buffer; 
-        System.arraycopy(space, 0, buffer.getData(), offset, sz); 
-        buffer.setDirty(true); 
+        Buffer buffer = getBlock(blockId);
+        lastAccessedBuffer = buffer;
+        System.arraycopy(space, 0, buffer.getData(), offset, sz);
+        buffer.setDirty(true);
     }
 
 
@@ -141,41 +142,41 @@ class BufferPool implements BufferPoolADT {
     private Buffer getBlock(int blockId) {
         // Check if block is already in cache
         if (cache.containsKey(blockId)) {
-            cacheHits++; 
+            cacheHits++;
             // Update LRU status by moving this block to the end of the list
-            lruList.remove((Integer)blockId); 
-            lruList.addLast(blockId); 
-            return cache.get(blockId); 
+            lruList.remove((Integer)blockId);
+            lruList.addLast(blockId);
+            return cache.get(blockId);
         }
 
         // If cache is full, evict least recently used block
         if (cache.size() >= numBuffers) {
-            evictLRU(); 
+            evictLRU();
         }
 
         // Load block from disk
-        Buffer buffer = new Buffer(blockId); 
+        Buffer buffer = new Buffer(blockId);
         try {
-            file.seek((long)blockId * bufferSize); 
-            int bytesRead = file.read(buffer.getData()); 
-            diskReads++; 
+            file.seek((long)blockId * bufferSize);
+            int bytesRead = file.read(buffer.getData());
+            diskReads++;
 
             // Handle case where file might be smaller than a full block
             if (bytesRead < bufferSize && bytesRead > 0) {
                 // Zero-fill the rest of the buffer if partial read
-                for (int i = bytesRead;  i < bufferSize;  i++) {
-                    buffer.getData()[i] = 0; 
+                for (int i = bytesRead; i < bufferSize; i++) {
+                    buffer.getData()[i] = 0;
                 }
             }
         }
         catch (IOException e) {
-            e.printStackTrace(); 
+            e.printStackTrace();
         }
 
         // Add to cache and update LRU
-        cache.put(blockId, buffer); 
-        lruList.addLast(blockId); 
-        return buffer; 
+        cache.put(blockId, buffer);
+        lruList.addLast(blockId);
+        return buffer;
     }
 
 
@@ -185,29 +186,29 @@ class BufferPool implements BufferPoolADT {
      */
     private void evictLRU() {
         if (lruList.isEmpty())
-            return; 
+            return;
 
-        Integer blockId = lruList.removeFirst(); 
-        Buffer buf = cache.get(blockId); 
+        Integer blockId = lruList.removeFirst();
+        Buffer buf = cache.get(blockId);
 
         // Write back dirty blocks to persist changes
         if (buf.isDirty()) {
             try {
-                file.seek((long)buf.getBlockId() * bufferSize); 
-                file.write(buf.getData()); 
-                diskWrites++; 
+                file.seek((long)buf.getBlockId() * bufferSize);
+                file.write(buf.getData());
+                diskWrites++;
             }
             catch (IOException e) {
-                e.printStackTrace(); 
+                e.printStackTrace();
             }
         }
 
-        cache.remove(blockId); 
+        cache.remove(blockId);
 
         // If the evicted buffer was the last accessed one, clear that reference
         if (lastAccessedBuffer != null && lastAccessedBuffer
             .getBlockId() == blockId) {
-            lastAccessedBuffer = null; 
+            lastAccessedBuffer = null;
         }
     }
 
@@ -221,14 +222,14 @@ class BufferPool implements BufferPoolADT {
         for (Buffer buf : cache.values()) {
             if (buf.isDirty()) {
                 try {
-                    file.seek((long)buf.getBlockId() * bufferSize); 
-                    file.write(buf.getData()); 
-                    diskWrites++; 
+                    file.seek((long)buf.getBlockId() * bufferSize);
+                    file.write(buf.getData());
+                    diskWrites++;
                 }
                 catch (IOException e) {
-                    e.printStackTrace(); 
+                    e.printStackTrace();
                 }
-                buf.setDirty(false); 
+                buf.setDirty(false);
             }
         }
     }
@@ -242,8 +243,8 @@ class BufferPool implements BufferPoolADT {
      *             If there is an error closing the file
      */
     public void close() throws IOException {
-        flush(); 
-        file.close(); 
+        flush();
+        file.close();
     }
 
 
@@ -253,7 +254,7 @@ class BufferPool implements BufferPoolADT {
      * @return The number of times a requested block was found in the cache
      */
     public long getCacheHits() {
-        return cacheHits; 
+        return cacheHits;
     }
 
 
@@ -263,7 +264,7 @@ class BufferPool implements BufferPoolADT {
      * @return The number of times a block had to be read from disk
      */
     public long getDiskReads() {
-        return diskReads; 
+        return diskReads;
     }
 
 
@@ -273,7 +274,7 @@ class BufferPool implements BufferPoolADT {
      * @return The number of times a block had to be written to disk
      */
     public long getDiskWrites() {
-        return diskWrites; 
+        return diskWrites;
     }
 }
 
@@ -283,18 +284,21 @@ class BufferPool implements BufferPoolADT {
 /**
  * Represents a single buffer in the buffer pool.
  * Contains the block data and metadata about the buffer state.
+ * 
+ * @author {Your Name Here}
+ * @version {Put Something Here}
  */
 class Buffer {
     /** ID of the block this buffer represents */
-    private final int blockId; 
+    private final int blockId;
 
     /** The actual data of the block */
-    private final byte[] data = new byte[4096]; 
+    private final byte[] data = new byte[4096];
 
     /**
      * Flag indicating whether the buffer has been modified since being loaded
      */
-    private boolean dirty = false; 
+    private boolean dirty = false;
 
     /**
      * Constructs a new buffer for the specified block.
@@ -303,7 +307,7 @@ class Buffer {
      *            The ID of the block this buffer will represent
      */
     public Buffer(int blockId) {
-        this.blockId = blockId; 
+        this.blockId = blockId;
     }
 
 
@@ -313,7 +317,7 @@ class Buffer {
      * @return The byte array containing this buffer's data
      */
     public byte[] getData() {
-        return data; 
+        return data;
     }
 
 
@@ -323,7 +327,7 @@ class Buffer {
      * @return true if the buffer has been modified, false otherwise
      */
     public boolean isDirty() {
-        return dirty; 
+        return dirty;
     }
 
 
@@ -334,7 +338,7 @@ class Buffer {
      *            true to mark the buffer as modified, false otherwise
      */
     public void setDirty(boolean dirty) {
-        this.dirty = dirty; 
+        this.dirty = dirty;
     }
 
 
@@ -344,6 +348,6 @@ class Buffer {
      * @return The block ID
      */
     public int getBlockId() {
-        return blockId; 
+        return blockId;
     }
 }
