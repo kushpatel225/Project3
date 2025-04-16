@@ -1,8 +1,22 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Random;
 
+/**
+ * Enum representing the two types of file formats that can be generated.
+ * The {@code FileType} enum is used to specify the format of the generated test
+ * data file.
+ * 
+ */
 enum FileType {
-    BINARY, ASCII
+    /** Represents a binary file format */
+    BINARY,
+
+    /** Represents an ASCII file format */
+    ASCII
 };
 
 
@@ -22,15 +36,31 @@ enum FileType {
  * @author Cliff Shaffer, Patrick Sullivan
  */
 public class FileGenerator {
+    /** The number of bytes in a key (short). */
     static public final int BYTES_IN_KEY = Short.BYTES;
+
+    /** The number of bytes in a value (short). */
     static public final int BYTES_IN_VALUE = Short.BYTES;
+
+    /** The total number of bytes per record (key + value). */
     static public final int BYTES_PER_RECORD = BYTES_IN_KEY + BYTES_IN_VALUE;
+
+    /** The number of records per block. */
     static public final int RECORDS_PER_BLOCK = 1024;
+
+    /** The number of bytes per block (records * bytes per record). */
     static public final int BYTES_PER_BLOCK = RECORDS_PER_BLOCK
         * BYTES_PER_RECORD;
 
-    public final int numBlocks;
-    public final String fname;
+    /** The number of blocks in the generated file. */
+    private final int numBlocks;
+
+    /** The name of the file to be generated. */
+    private final String fname;
+
+    /**
+     * The random number generator used for generating data.
+     */
     private Random rng;
 
     /**
@@ -90,7 +120,8 @@ public class FileGenerator {
         }
         catch (IOException e) {
             e.printStackTrace();
-            System.out.println("ERROR: IOException in fileGen. See System.err");
+            System.out.println(
+                "ERROR: IOException in fileGen. See System.err");
             return;
         }
     }
@@ -118,7 +149,7 @@ public class FileGenerator {
             for (int j = 0; j < RECORDS_PER_BLOCK; j++) {
                 randKey = Math.abs(rng.nextInt() % range) + asciiOffset;
                 dos.writeShort(randKey); // THIS writes to the file!
-                dos.writeShort(blankVal);// THIS writes to the file!
+                dos.writeShort(blankVal); // THIS writes to the file!
             }
         }
     }

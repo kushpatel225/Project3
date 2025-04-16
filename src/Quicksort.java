@@ -1,6 +1,11 @@
+
 /**
  * {Project Description Here}
  */
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * The class containing the main method.
@@ -37,36 +42,38 @@ public class Quicksort {
      */
     public static void main(String[] args) {
         // This is the main file for the program.
+        if (args.length != 3) {
+            System.err.println("Usage: java Quicksort <data-file-name> "
+                + "<num-buffers> <stat-file-name>");
+            return;
+        }
 
-        // Classes
-        /**
-         * Quicksort
-         * Main class, shouldn't write everything here
-         * Needs to accept the number of buffers as params
-         */
-        /**
-         * Buffer class
-         * Need to store ID block (Block index in file that it is storing data
-         * for)
-         * Dirty bit (Update bit)
-         * byte Array, size 4096, represents the actual data that the buffer
-         * stores
-         */
-        /**
-         * Buffer pool
-         * File, file we need to sort
-         * Number of disk reads
-         * Number of disk writes, how many times had to access to the disk
-         * Number of cache hits, how many times a record was called and found in
-         * the buffer
-         * Buffer array
-         * Methods:
-         * Getbytes
-         * Writebytes
-         */
-        /**
-         * Sort
-         * Logic for quicksort
-         */
+        String dataFile = args[0];
+        int numBuffers = Integer.parseInt(args[1]);
+        String statFile = args[2];
+
+        try {
+            BufferPool pool = new BufferPool(dataFile, numBuffers);
+            long fileSize = new File(dataFile).length();
+            Sorter sorter = new Sorter(pool, fileSize);
+
+            long start = System.currentTimeMillis();
+            sorter.sort();
+            long end = System.currentTimeMillis();
+
+            pool.close();
+
+            try (FileWriter fw = new FileWriter(statFile, true)) {
+                fw.write("File: " + dataFile + "\n");
+                fw.write("Cache Hits: " + pool.getCacheHits() + "\n");
+                fw.write("Disk Reads: " + pool.getDiskReads() + "\n");
+                fw.write("Disk Writes: " + pool.getDiskWrites() + "\n");
+                fw.write("Sort Time (ms): " + (end - start) + "\n\n");
+            }
+
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
